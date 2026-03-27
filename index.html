@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shannon-Fano Coding Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .input-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .input-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .probability-inputs {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 100px 1fr auto;
+            align-items: center;
+            gap: 15px;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .input-row:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .input-row label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .input-row input {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .input-row input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+
+        .remove-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .remove-btn:hover {
+            background: #e84118;
+            transform: scale(1.05);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+        }
+
+        .btn-secondary {
+            background: #48dbfb;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #0abde3;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ff4757;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #5f27cd;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #feca57;
+            color: #333;
+        }
+
+        .results-section {
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .results-section.active {
+            display: block;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid #667eea;
+        }
+
+        .card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th {
+            background: #f8f9fa;
+            color: #555;
+            font-weight: bold;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .code {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #667eea;
+            font-size: 1.1em;
+        }
+
+        .stat-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .tree-container {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+        }
+
+        .tree {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre;
+        }
+
+        .error {
+            background: #ff4757;
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .success {
+            background: #00d2d3;
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .input-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            th, td {
+                padding: 8px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Shannon-Fano Coding Calculator</h1>
+            <p>Interactive tool for lossless data compression using Shannon-Fano algorithm</p>
+        </div>
+        
+        <div class="content">
+            <div class="input-section">
+                <h2>📝 Input Probabilities</h2>
+                <div id="probabilityInputs" class="probability-inputs">
+                    <div class="input-row">
+                        <label>Symbol x₁:</label>
+                        <input type="number" step="0.01" min="0" max="1" value="0.4" class="prob-input">
+                        <button class="remove-btn" onclick="removeInput(this)">Remove</button>
+                    </div>
+                    <div class="input-row">
+                        <label>Symbol x₂:</label>
+                        <input type="number" step="0.01" min="0" max="1" value="0.2" class="prob-input">
+                        <button class="remove-btn" onclick="removeInput(this)">Remove</button>
+                    </div>
+                    <div class="input-row">
+                        <label>Symbol x₃:</label>
+                        <input type="number" step="0.01" min="0" max="1" value="0.2" class="prob-input">
+                        <button class="remove-btn" onclick="removeInput(this)">Remove</button>
+                    </div>
+                    <div class="input-row">
+                        <label>Symbol x₄:</label>
+                        <input type="number" step="0.01" min="0" max="1" value="0.1" class="prob-input">
+                        <button class="remove-btn" onclick="removeInput(this)">Remove</button>
+                    </div>
+                    <div class="input-row">
+                        <label>Symbol x₅:</label>
+                        <input type="number" step="0.01" min="0" max="1" value="0.1" class="prob-input">
+                        <button class="remove-btn" onclick="removeInput(this)">Remove</button>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn-secondary" onclick="addInput()">➕ Add Symbol</button>
+                    <button class="btn-primary" onclick="calculateShannonFano()">🚀 Calculate Shannon-Fano Code</button>
+                    <button class="btn-danger" onclick="clearAll()">🗑️ Clear All</button>
+                    <button class="btn-warning" onclick="loadExample()">📋 Load Example</button>
+                </div>
+                <div id="inputError" style="margin-top: 15px;"></div>
+            </div>
+            
+            <div id="results" class="results-section">
+                <div class="card">
+                    <h3>📊 Shannon-Fano Codes</h3>
+                    <div class="table-container">
+                        <table id="codeTable">
+                            <thead>
+                                <tr><th>Symbol</th><th>Probability (pᵢ)</th><th>Shannon-Fano Code</th><th>Code Length (lᵢ)</th></tr>
+                            </thead>
+                            <tbody id="codeTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>📈 Performance Metrics</h3>
+                    <div id="metrics"></div>
+                </div>
+                
+                <div class="card">
+                    <h3>🌳 Coding Tree Structure</h3>
+                    <div id="treeStructure" class="tree-container"></div>
+                </div>
+                
+                <div class="card">
+                    <h3>📝 Step-by-Step Calculation</h3>
+                    <div id="stepByStep"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let symbolCounter = 5;
+
+        function addInput() {
+            symbolCounter++;
+            const container = document.getElementById('probabilityInputs');
+            const newRow = document.createElement('div');
+            newRow.className = 'input-row';
+            newRow.innerHTML = `
+                <label>Symbol x${symbolCounter}:</label>
+                <input type="number" step="0.01" min="0" max="1" value="0.0" class="prob-input">
+                <button class="remove-btn" onclick="removeInput(this)">Remove</button>
+            `;
+            container.appendChild(newRow);
+        }
+
+        function removeInput(button) {
+            const row = button.parentElement;
+            const container = document.getElementById('probabilityInputs');
+            if (container.children.length > 1) {
+                row.remove();
+                updateSymbolLabels();
+            } else {
+                showError('At least one symbol is required!');
+            }
+        }
+
+        function updateSymbolLabels() {
+            const rows = document.querySelectorAll('.input-row');
+            rows.forEach((row, index) => {
+                const label = row.querySelector('label');
+                label.textContent = `Symbol x${index + 1}:`;
+            });
+            symbolCounter = rows.length;
+        }
+
+        function clearAll() {
+            const container = document.getElementById('probabilityInputs');
+            container.innerHTML = '';
+            addInput();
+            updateSymbolLabels();
+            document.getElementById('results').classList.remove('active');
+            document.getElementById('inputError').innerHTML = '';
+        }
+
+        function loadExample() {
+            const container = document.getElementById('probabilityInputs');
+            container.innerHTML = '';
+            const exampleProbs = [0.4, 0.2, 0.2, 0.1, 0.1];
+            exampleProbs.forEach((prob, index) => {
+                const newRow = document.createElement('div');
+                newRow.className = 'input-row';
+                newRow.innerHTML = `
+                    <label>Symbol x${index + 1}:</label>
+                    <input type="number" step="0.01" min="0" max="1" value="${prob}" class="prob-input">
+                    <button class="remove-btn" onclick="removeInput(this)">Remove</button>
+                `;
+                container.appendChild(newRow);
+            });
+            updateSymbolLabels();
+            document.getElementById('inputError').innerHTML = '';
+            calculateShannonFano();
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('inputError');
+            errorDiv.innerHTML = `<div class="error">⚠️ ${message}</div>`;
+            setTimeout(() => {
+                errorDiv.innerHTML = '';
+            }, 3000);
+        }
+
+        function showSuccess(message) {
+            const errorDiv = document.getElementById('inputError');
+            errorDiv.innerHTML = `<div class="success">✓ ${message}</div>`;
+            setTimeout(() => {
+                errorDiv.innerHTML = '';
+            }, 3000);
+        }
+
+        function validateProbabilities(probs) {
+            const sum = probs.reduce((a, b) => a + b, 0);
+            if (Math.abs(sum - 1) > 0.01) {
+                showError(`Probabilities must sum to 1. Current sum: ${sum.toFixed(4)}`);
+                return false;
+            }
+            if (probs.some(p => p < 0 || p > 1)) {
+                showError('All probabilities must be between 0 and 1');
+                return false;
+            }
+            return true;
+        }
+
+        function shannonFanoEncoding(symbols, probs) {
+            // Sort symbols by probability in descending order
+            const items = symbols.map((s, i) => ({ symbol: s, prob: probs[i], originalIndex: i }));
+            items.sort((a, b) => b.prob - a.prob);
+            
+            const codes = new Array(symbols.length);
+            
+            function recursiveShannonFano(sortedItems, prefix) {
+                if (sortedItems.length === 1) {
+                    codes[sortedItems[0].originalIndex] = prefix;
+                    return;
+                }
+                
+                // Find split point
+                const totalProb = sortedItems.reduce((sum, item) => sum + item.prob, 0);
+                let cumProb = 0;
+                let splitIndex = 0;
+                
+                for (let i = 0; i < sortedItems.length - 1; i++) {
+                    cumProb += sortedItems[i].prob;
+                    if (cumProb >= totalProb / 2) {
+                        splitIndex = i;
+                        break;
+                    }
+                    splitIndex = i;
+                }
+                
+                // Left group (0)
+                recursiveShannonFano(sortedItems.slice(0, splitIndex + 1), prefix + '0');
+                // Right group (1)
+                recursiveShannonFano(sortedItems.slice(splitIndex + 1), prefix + '1');
+            }
+            
+            recursiveShannonFano(items, '');
+            return codes;
+        }
+
+        function calculateShannonFano() {
+            const inputs = document.querySelectorAll('.prob-input');
+            const probs = Array.from(inputs).map(input => parseFloat(input.value) || 0);
+            
+            if (!validateProbabilities(probs)) return;
+            
+            const symbols = probs.map((_, i) => `x${i + 1}`);
+            const codes = shannonFanoEncoding(symbols, probs);
+            
+            // Display code table
+            const tableBody = document.getElementById('codeTableBody');
+            tableBody.innerHTML = '';
+            
+            const sortedIndices = [...Array(probs.length).keys()].sort((a, b) => probs[b] - probs[a]);
+            
+            sortedIndices.forEach(idx => {
+                const row = tableBody.insertRow();
+                row.insertCell(0).textContent = symbols[idx];
+                row.insertCell(1).textContent = probs[idx].toFixed(4);
+                row.insertCell(2).innerHTML = `<span class="code">${codes[idx]}</span>`;
+                row.insertCell(3).textContent = codes[idx].length;
+            });
+            
+            // Calculate metrics
+            const avgLength = probs.reduce((sum, p, i) => sum + p * codes[i].length, 0);
+            const entropy = -probs.reduce((sum, p) => sum + (p > 0 ? p * Math.log2(p) : 0), 0);
+            const efficiency = entropy / avgLength;
+            const redundancy = 1 - efficiency;
+            
+            // Display metrics
+            const metricsDiv = document.getElementById('metrics');
+            metricsDiv.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                    <div style="padding: 15px; background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%); border-radius: 10px;">
+                        <strong>📏 Average Code Length (L)</strong><br>
+                        <span class="stat-value">L = ${avgLength.toFixed(4)} bits/symbol</span><br>
+                        <small>L = Σ pᵢ × lᵢ</small>
+                    </div>
+                    <div style="padding: 15px; background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%); border-radius: 10px;">
+                        <strong>⚡ Entropy (H)</strong><br>
+                        <span class="stat-value">H = ${entropy.toFixed(4)} bits/symbol</span><br>
+                        <small>H = -Σ pᵢ × log₂(pᵢ)</small>
+                    </div>
+                    <div style="padding: 15px; background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%); border-radius: 10px;">
+                        <strong>🎯 Coding Efficiency (η)</strong><br>
+                        <span class="stat-value">η = ${(efficiency * 100).toFixed(2)}%</span><br>
+                        <small>η = H / L</small>
+                    </div>
+                    <div style="padding: 15px; background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%); border-radius: 10px;">
+                        <strong>🔄 Redundancy (R)</strong><br>
+                        <span class="stat-value">R = ${(redundancy * 100).toFixed(2)}%</span><br>
+                        <small>R = 1 - η</small>
+                    </div>
+                </div>
+            `;
+            
+            // Generate tree structure
+            const treeDiv = document.getElementById('treeStructure');
+            treeDiv.innerHTML = generateTreeStructure(symbols, probs, codes);
+            
+            // Generate step-by-step calculation
+            const stepDiv = document.getElementById('stepByStep');
+            stepDiv.innerHTML = generateStepByStep(symbols, probs, codes, avgLength, entropy, efficiency);
+            
+            // Show results
+            document.getElementById('results').classList.add('active');
+            showSuccess('Shannon-Fano coding completed successfully!');
+        }
+        
+        function generateTreeStructure(symbols, probs, codes) {
+            const items = symbols.map((s, i) => ({ symbol: s, prob: probs[i], code: codes[i] }));
+            items.sort((a, b) => a.code.localeCompare(b.code));
+            
+            let treeHTML = '<div class="tree"><pre>';
+            treeHTML += 'Root\n';
+            
+            const groups = {};
+            items.forEach(item => {
+                const firstBit = item.code[0];
+                if (!groups[firstBit]) groups[firstBit] = [];
+                groups[firstBit].push(item);
+            });
+            
+            for (let bit in groups) {
+                const group = groups[bit];
+                const totalProb = group.reduce((sum, item) => sum + item.prob, 0);
+                treeHTML += `├─ ${bit} (total prob: ${totalProb.toFixed(3)})\n`;
+                
+                group.forEach((item, idx) => {
+                    const isLast = idx === group.length - 1;
+                    const prefix = isLast ? '   └─ ' : '   ├─ ';
+                    if (item.code.length === 1) {
+                        treeHTML += `${prefix}${item.code}: ${item.symbol} (${item.prob.toFixed(3)})\n`;
+                    } else {
+                        const remainingCode = item.code.substring(1);
+                        treeHTML += `${prefix}${remainingCode}: ${item.symbol} (${item.prob.toFixed(3)})\n`;
+                    }
+                });
+            }
+            
+            treeHTML += '</pre></div>';
+            return treeHTML;
+        }
+        
+        function generateStepByStep(symbols, probs, codes, avgLength, entropy, efficiency) {
+            let html = '<div style="line-height: 1.8;">';
+            
+            html += '<strong>Step 1: Sort symbols by probability (descending order)</strong><br>';
+            const sortedItems = symbols.map((s, i) => ({ symbol: s, prob: probs[i], code: codes[i] }))
+                                      .sort((a, b) => b.prob - a.prob);
+            sortedItems.forEach(item => {
+                html += `${item.symbol}: ${item.prob.toFixed(4)}<br>`;
+            });
+            
+            html += '<br><strong>Step 2: Recursive splitting into groups with equal probability</strong><br>';
+            html += 'Each split assigns "0" to left group and "1" to right group<br><br>';
+            
+            html += '<strong>Step 3: Assign Shannon-Fano codes</strong><br>';
+            symbols.forEach((symbol, i) => {
+                html += `${symbol} (${probs[i].toFixed(4)}) → ${codes[i]} (${codes[i].length} bits)<br>`;
+            });
+            
+            html += `<br><strong>Step 4: Calculate Average Code Length</strong><br>`;
+            html += `L = Σ pᵢ × lᵢ = `;
+            const terms = symbols.map((_, i) => `${probs[i].toFixed(4)}×${codes[i].length}`).join(' + ');
+            html += `${terms}<br>`;
+            html += `L = ${avgLength.toFixed(4)} bits/symbol<br><br>`;
+            
+            html += `<strong>Step 5: Calculate Entropy</strong><br>`;
+            html += `H = -Σ pᵢ × log₂(pᵢ) = `;
+            const entropyTerms = symbols.map((_, i) => {
+                if (probs[i] > 0) return `${probs[i].toFixed(4)}×log₂(${probs[i].toFixed(4)})`;
+                return '0';
+            }).filter(t => t !== '0').join(' + ');
+            html += `-[${entropyTerms}]<br>`;
+            html += `H = ${entropy.toFixed(4)} bits/symbol<br><br>`;
+            
+            html += `<strong>Step 6: Calculate Coding Efficiency</strong><br>`;
+            html += `η = H / L = ${entropy.toFixed(4)} / ${avgLength.toFixed(4)} = ${(efficiency * 100).toFixed(2)}%<br>`;
+            
+            html += '</div>';
+            return html;
+        }
+        
+        // Auto-calculate on page load
+        window.onload = () => {
+            setTimeout(() => {
+                calculateShannonFano();
+            }, 500);
+        };
+    </script>
+</body>
+</html>
